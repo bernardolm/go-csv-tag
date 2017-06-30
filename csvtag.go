@@ -58,7 +58,7 @@ func Load(config Config) error {
 // @param path: path of the csv file
 // @param separator: the separator used in the csv file
 // @param header: the optional header if the file does not contain one
-func readFile(path string, separator rune, header []string) (map[string]int, [][]string, error) {
+func readFile(path string, separator rune, header []string, modifier fn) (map[string]int, [][]string, error) {
 	// Open the file
 	file, err := os.Open(path)
 	if err != nil {
