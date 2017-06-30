@@ -8,12 +8,15 @@ import (
 	"strconv"
 )
 
+type fn func(*os.File) *string
+
 // Config struct to pass to the Load function
 type Config struct {
 	Path      string
 	Dest      interface{}
 	Separator rune
 	Header    []string
+	Modifier  fn
 }
 
 // Load - Load a csv file and put it in a array of the dest type
@@ -30,7 +33,7 @@ type Config struct {
 // @param dest: object where to store the result
 // @return an error if one occure
 func Load(config Config) error {
-	header, content, err := readFile(config.Path, config.Separator, config.Header)
+	header, content, err := readFile(config.Path, config.Separator, config.Header, config.Modifier)
 	if err != nil {
 		return fmt.Errorf("Error while loading csv (%v):\n	==> %v", config.Path, err)
 	}
@@ -61,9 +64,19 @@ func readFile(path string, separator rune, header []string) (map[string]int, [][
 	if err != nil {
 		return nil, nil, err
 	}
+	// Calling file mofifier
+	var contents *string
+	// if fn != nil {
+	contents = modifier(file)
+	// }
 	// Read the file
 	// We need to read it all at once to have the number of records
-	reader := csv.NewReader(file) // Create the csv reader
+	var reader *csv.Reader
+	if contents == nil {
+		reader = csv.NewReader(file) // Create the csv reader from os.Open
+	} else {
+		reader = csv.NewReader(strings.NewReader(*contents)) // Create the csv reader from string
+	}
 	reader.TrimLeadingSpace = true
 	if separator != 0 {
 		reader.Comma = separator
