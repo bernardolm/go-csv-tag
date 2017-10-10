@@ -9,15 +9,13 @@ import (
 	"strings"
 )
 
-type fn func(*os.File) *string
-
 // Config struct to pass to the Load function
 type Config struct {
 	Path      string
 	Dest      interface{}
 	Separator rune
 	Header    []string
-	Modifier  *fn
+	Modifier  interface{}
 }
 
 // Load - Load a csv file and put it in a array of the dest type
@@ -60,7 +58,7 @@ func Load(config Config) error {
 // @param separator: the separator used in the csv file
 // @param header: the optional header if the file does not contain one
 // @param modifier: the optional file modifier function
-func readFile(path string, separator rune, header []string, modifier *fn) (map[string]int, [][]string, error) {
+func readFile(path string, separator rune, header []string, modifier interface{}) (map[string]int, [][]string, error) {
 	// Open the file
 	file, err := os.Open(path)
 	if err != nil {
@@ -68,8 +66,7 @@ func readFile(path string, separator rune, header []string, modifier *fn) (map[s
 	}
 	// Calling file mofifier
 	var contents *string
-	if modifier != nil {
-		f := *modifier
+	if f, ok := modifier.(func(*os.File) *string); ok {
 		contents = f(file)
 	}
 	// Read the file
