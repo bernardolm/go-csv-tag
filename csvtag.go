@@ -17,7 +17,7 @@ type Config struct {
 	Dest      interface{}
 	Separator rune
 	Header    []string
-	Modifier  fn
+	Modifier  *fn
 }
 
 // Load - Load a csv file and put it in a array of the dest type
@@ -59,7 +59,8 @@ func Load(config Config) error {
 // @param path: path of the csv file
 // @param separator: the separator used in the csv file
 // @param header: the optional header if the file does not contain one
-func readFile(path string, separator rune, header []string, modifier fn) (map[string]int, [][]string, error) {
+// @param modifier: the optional file modifier function
+func readFile(path string, separator rune, header []string, modifier *fn) (map[string]int, [][]string, error) {
 	// Open the file
 	file, err := os.Open(path)
 	if err != nil {
@@ -67,9 +68,10 @@ func readFile(path string, separator rune, header []string, modifier fn) (map[st
 	}
 	// Calling file mofifier
 	var contents *string
-	// if fn != nil {
-	contents = modifier(file)
-	// }
+	if modifier != nil {
+		f := *modifier
+		contents = f(file)
+	}
 	// Read the file
 	// We need to read it all at once to have the number of records
 	var reader *csv.Reader
